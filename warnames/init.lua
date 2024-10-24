@@ -49,6 +49,7 @@ minetest.register_craftitem("warnames:id_card", {
         return itemstack
     end,
 })
+
 -- Function to assign players to teams and roles
 local function assign_team(player)
     local player_name = player:get_player_name()
@@ -61,41 +62,41 @@ local function assign_team(player)
         local real_name, role
         if team == "USSR" then
             real_name = ussr_names[math.random(#ussr_names)]
-            role = ({"General", "Comrade", "Spy"})[math.random(3)] 
+            role = ({"General", "Comrade", "Spy", "Sniper", "Engineer"})[math.random(5)]
         else
             real_name = allied_names[math.random(#allied_names)]
-            role = ({"Commander", "Cadet", "Spy"})[math.random(3)]
+            role = ({"Commander", "Cadet", "Spy", "Sniper", "Engineer"})[math.random(5)]
         end
 
         player:get_meta():set_string("team", team)
         player:get_meta():set_string("real_name", real_name)  
         player:get_meta():set_string("role", role)
 
-        local items = {
-            commander = "default:gold_ingot",
-            spy = "default:silver_ingot",
-            soldier = "default:stone",
-            cadet = "default:paper"
-        }
-
+        -- Function to give players team-specific items
         local function spawn_players(team_name)
+            local inventory = player:get_inventory()
+            -- Clear previous items to avoid unwanted spawning
+            inventory:set_list("main", {}) 
+
             if team_name == "USSR" then
                 minetest.chat_send_player(player_name, "You are on the USSR team!")
-                minetest.add_item(player:get_pos(), items.commander)
-                for i=1,math.random(1,3) do
-                    minetest.add_item(player:get_pos(), items.spy)
+                -- Add weapons and ammo directly to the player's inventory
+                inventory:add_item("main", "guns4d_pack_1:m4") -- M4 rifle
+                for i = 1, 5 do
+                    inventory:add_item("main", "guns4d_pack_1:556") -- 5.56 ammo for M4
                 end
-                for i=1,5 do
-                    minetest.add_item(player:get_pos(), items.soldier)
+                for i = 1, 3 do
+                    inventory:add_item("main", "guns4d_pack_1:12G") -- 12 gauge ammo
                 end
             elseif team_name == "Allies" then
                 minetest.chat_send_player(player_name, "You are on the Allies team!")
-                minetest.add_item(player:get_pos(), items.commander)
-                for i=1,math.random(1,3) do
-                    minetest.add_item(player:get_pos(), items.spy)
+                -- Add weapons and ammo directly to the player's inventory
+                inventory:add_item("main", "guns4d_pack_1:m4") -- M4 rifle for Allies as well
+                for i = 1, 5 do
+                    inventory:add_item("main", "guns4d_pack_1:45A") -- .45 ACP ammo for Allies
                 end
-                for i=1,5 do
-                    minetest.add_item(player:get_pos(), items.soldier)
+                for i = 1, 3 do
+                    inventory:add_item("main", "guns4d_pack_1:12G") -- 12 gauge ammo
                 end
             end
         end
@@ -114,13 +115,14 @@ local function assign_team(player)
         -- Set the metadata to indicate that the player has received the ID card
         player:get_meta():set_string("has_id_card", "true")
     else
-        minetest.chat_send_player(player_name, "Welcome " .. player_name)
+        minetest.chat_send_player(player_name, "Welcome back, " .. player_name .. "!")
     end
 end
 
-
+-- Register the function to run when a player joins
 minetest.register_on_joinplayer(assign_team)
 
+-- Chat command to change teams
 minetest.register_chatcommand("change_team", {
     params = "",
     description = "Change your team",
